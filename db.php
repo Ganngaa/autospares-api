@@ -1,12 +1,12 @@
 <?php
 
-$host = "localhost";
+$host = "sql12.freesqldatabase.com";
 
-$user = "root";
+$user = "sql12828733";
 
-$password = "";
+$password = "nJcxdhpSjF";
 
-$database = "autospares";
+$database = "sql12828733";
 
 $conn = new mysqli(
 
