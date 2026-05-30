@@ -1,24 +1,20 @@
 <?php
 
-header("Access-Control-Allow-Origin: *");
-
 header("Content-Type: application/json");
 
-include 'db.php';
+include("db.php");
 
 $id = $_POST['id'];
 
 $conn->query(
-    "DELETE FROM loan_payments
-     WHERE loan_id = '$id'"
+    "DELETE FROM loan_payments WHERE loan_id='$id'"
 );
 
-$sql = "
+$conn->query(
+    "DELETE FROM loan_items WHERE loan_id='$id'"
+);
 
-DELETE FROM loans
-
-WHERE id = '$id'
-";
+$sql = "DELETE FROM loans WHERE id='$id'";
 
 if($conn->query($sql)){
 
@@ -32,5 +28,4 @@ if($conn->query($sql)){
         "success" => false
     ]);
 }
-
 ?>
