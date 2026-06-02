@@ -1,7 +1,16 @@
 <?php
 
-require 'cloudinary_config.php';
+require 'vendor/autoload.php';
 
-echo json_encode([
-    "success" => true
+use Cloudinary\Configuration\Configuration;
+
+Configuration::instance([
+    'cloud' => [
+        'cloud_name' => getenv('CLOUDINARY_CLOUD_NAME'),
+        'api_key'    => getenv('CLOUDINARY_API_KEY'),
+        'api_secret' => getenv('CLOUDINARY_API_SECRET'),
+    ],
+    'url' => [
+        'secure' => true
+    ]
 ]);
