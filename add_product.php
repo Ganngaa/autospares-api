@@ -1,63 +1,72 @@
 <?php
 
 header("Access-Control-Allow-Origin: *");
-
 header("Content-Type: application/json");
 
 include 'db.php';
 
-$name = $_POST['name'];
+$name = $_POST['name'] ?? '';
+$description = $_POST['description'] ?? '';
+$price = $_POST['price'] ?? '';
+$stock = $_POST['stock'] ?? '';
+$position = $_POST['position_location'] ?? '';
+$category = $_POST['category'] ?? '';
 
-$description =
-$_POST['description'];
+$imagePath = '';
 
-$price = $_POST['price'];
+if (isset($_FILES['image'])) {
 
-$stock = $_POST['stock'];
+    $uploadDir = "uploads/";
 
-$position =
-$_POST['position_location'];
+    if (!file_exists($uploadDir)) {
+        mkdir($uploadDir, 0777, true);
+    }
 
-$category =
-$_POST['category'];
+    $fileName = time() . "_" . basename($_FILES["image"]["name"]);
 
-$image = $_POST['image'];
+    $targetFile = $uploadDir . $fileName;
 
-$sql = "
+    if (move_uploaded_file(
+        $_FILES["image"]["tmp_name"],
+        $targetFile
+    )) {
+        $imagePath = $targetFile;
+    }
+}
 
-INSERT INTO products(
+$sql = "INSERT INTO products(
+            name,
+            description,
+            price,
+            stock,
+            position_location,
+            category,
+            image
+        ) VALUES (
+            '$name',
+            '$description',
+            '$price',
+            '$stock',
+            '$position',
+            '$category',
+            '$imagePath'
+        )";
 
-    name,
-    description,
-    price,
-    stock,
-    position_location,
-    category,
-    image
-
-) VALUES(
-
-    '$name',
-    '$description',
-    '$price',
-    '$stock',
-    '$position',
-    '$category',
-    '$image'
-)
-";
-
-if($conn->query($sql)){
+if ($conn->query($sql)) {
 
     echo json_encode([
-        "success" => true
+        "success" => true,
+        "image" => $imagePath
     ]);
 
-}else{
+} else {
 
     echo json_encode([
-        "success" => false
+        "success" => false,
+        "error" => $conn->error
     ]);
 }
+
+$conn->close();
 
 ?>
