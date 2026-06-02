@@ -10,44 +10,73 @@ $conn = new mysqli(
     "autospares"
 );
 
-$id = $_POST['id'];
-
+$id = intval($_POST['id']);
 $action = $_POST['action'];
-
 $quantity = intval($_POST['quantity']);
 
-$product =
-$conn->query(
-    "SELECT stock FROM products WHERE id=$id"
+$product = $conn->query(
+    "SELECT name, stock
+     FROM products
+     WHERE id = $id"
 );
+
+if (!$product || $product->num_rows == 0) {
+
+    echo json_encode([
+        "success" => false,
+        "message" => "Product not found"
+    ]);
+    exit;
+}
 
 $row = $product->fetch_assoc();
 
+$productName = $row['name'];
 $currentStock = intval($row['stock']);
 
-if($action == "add"){
+if ($action == "add") {
 
-    $newStock =
-        $currentStock + $quantity;
-}
-else{
+    $newStock = $currentStock + $quantity;
+    $actionType = "ADD";
 
-    $newStock =
-        $currentStock - $quantity;
+} else {
 
-    if($newStock < 0){
+    $newStock = $currentStock - $quantity;
+
+    if ($newStock < 0) {
         $newStock = 0;
     }
+
+    $actionType = "SELL";
 }
 
 $conn->query(
     "UPDATE products
-     SET stock=$newStock
-     WHERE id=$id"
+     SET stock = $newStock
+     WHERE id = $id"
+);
+
+$conn->query(
+    "INSERT INTO stock_history
+    (
+        product_id,
+        product_name,
+        action_type,
+        quantity
+    )
+    VALUES
+    (
+        $id,
+        '$productName',
+        '$actionType',
+        $quantity
+    )"
 );
 
 echo json_encode([
-    "success" => true
+    "success" => true,
+    "old_stock" => $currentStock,
+    "new_stock" => $newStock
 ]);
 
 ?>
