@@ -3,12 +3,7 @@
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json");
 
-$conn = new mysqli(
-    "localhost",
-    "root",
-    "",
-    "autospares"
-);
+require_once(__DIR__ . "/db.php");
 
 $id = intval($_POST['id']);
 $action = $_POST['action'];
