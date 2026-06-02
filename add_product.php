@@ -4,6 +4,9 @@ header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json");
 
 include 'db.php';
+require 'cloudinary_config.php';
+
+use Cloudinary\Api\Upload\UploadApi;
 
 $name = $_POST['name'] ?? '';
 $description = $_POST['description'] ?? '';
@@ -12,29 +15,22 @@ $stock = $_POST['stock'] ?? '';
 $position = $_POST['position_location'] ?? '';
 $category = $_POST['category'] ?? '';
 
-$imagePath = '';
+$imageUrl = '';
 
-if (isset($_FILES['image'])) {
+try {
 
-    $uploadDir = "uploads/";
+    if (isset($_FILES['image'])) {
 
-    if (!file_exists($uploadDir)) {
-        mkdir($uploadDir, 0777, true);
+        $upload = (new UploadApi())->upload(
+            $_FILES['image']['tmp_name']
+        );
+
+        $imageUrl = $upload['secure_url'];
     }
 
-    $fileName = time() . "_" . basename($_FILES["image"]["name"]);
-
-    $targetFile = $uploadDir . $fileName;
-
-    if (move_uploaded_file(
-        $_FILES["image"]["tmp_name"],
-        $targetFile
-    )) {
-        $imagePath = $targetFile;
-    }
-}
-
-$sql = "INSERT INTO products(
+    $stmt = $conn->prepare(
+        "INSERT INTO products
+        (
             name,
             description,
             price,
@@ -42,28 +38,41 @@ $sql = "INSERT INTO products(
             position_location,
             category,
             image
-        ) VALUES (
-            '$name',
-            '$description',
-            '$price',
-            '$stock',
-            '$position',
-            '$category',
-            '$imagePath'
-        )";
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?)"
+    );
 
-if ($conn->query($sql)) {
+    $stmt->bind_param(
+        "ssdisss",
+        $name,
+        $description,
+        $price,
+        $stock,
+        $position,
+        $category,
+        $imageUrl
+    );
 
-    echo json_encode([
-        "success" => true,
-        "image" => $imagePath
-    ]);
+    if ($stmt->execute()) {
 
-} else {
+        echo json_encode([
+            "success" => true,
+            "image" => $imageUrl
+        ]);
+
+    } else {
+
+        echo json_encode([
+            "success" => false,
+            "message" => $stmt->error
+        ]);
+    }
+
+} catch (Exception $e) {
 
     echo json_encode([
         "success" => false,
-        "error" => $conn->error
+        "message" => $e->getMessage()
     ]);
 }
 
